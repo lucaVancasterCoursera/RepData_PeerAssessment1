@@ -27,7 +27,8 @@ Size: 52K (2018-04-02 14:15:00)
 
 ## Data processing steps
 1. Setting the environment & variables
-```{r echo=TRUE, results='hide'}
+
+```r
 library(plyr, warn.conflicts = FALSE) 
 library(dplyr, warn.conflicts = FALSE)
 library(data.table, warn.conflicts = FALSE)
@@ -38,7 +39,8 @@ dir.create('./data')
 ```
 
 2. Download & extract dataset
-```{r echo=TRUE, results='hide'}
+
+```r
 download.file('https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip',
               destfile = 'dataset.zip',
               method = 'curl')
@@ -49,14 +51,16 @@ a<-ldply(.data = zipF, .fun = unzip, exdir = './data')
 
 
 ## Loading and preprocessing the data
-```{r echo=TRUE, results='hide'}
+
+```r
 dat <- data.table(read.csv('data/activity.csv', header=TRUE))
 dat$date <- as.Date(dat$date, format="%Y-%m-%d")
 ```
 
 
 ## What is mean total number of steps taken per day?
-```{r echo=TRUE}
+
+```r
 tot <-aggregate(dat$steps, by=list(dat$date), FUN=sum)
 setnames(tot, 'Group.1', 'date')
 setnames(tot, 'x', 'steps')
@@ -64,29 +68,40 @@ hist(tot$steps,
      main = "Daily steps", 
      xlab = 'Steps', 
      col = 'light blue')
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+```r
 totMean <- mean(tot$steps, na.rm=TRUE)
 totMedian <- median(tot$steps, na.rm=TRUE)
 ```
 
-Mean of total steps: `r sprintf("%3.2f steps", totMean)`  
-Median of total steps: `r sprintf("%3.2f steps", totMedian)`  
+Mean of total steps: 10766.19 steps  
+Median of total steps: 10765.00 steps  
   
   
 
 ## What is the average daily activity pattern?
-```{r echo=TRUE, results='hide'}
+
+```r
 tot1 <-aggregate(dat$steps, by=list(dat$interval), FUN=mean, na.rm=TRUE)
 plot(tot1$Group.1, tot1$x, type='l', xlab='Intervals (5min)', ylab='Steps', main='Average steps by interval', col='red')
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+```r
 maxStepsInterval <- tot1$Group.1[tot1$x == max(tot1$x)]
 maxSteps <- tot1$x[tot1$x == max(tot1$x)]
 ```
 
-The interval with maximum steps is `r maxStepsInterval` (with an average of `r sprintf("%3.2f steps", maxSteps)`)
+The interval with maximum steps is 835 (with an average of 206.17 steps)
 
 
 ## Imputing missing values
-```{r echo=TRUE, results='hide'}
+
+```r
 missingDataRows <- length(dat$interval[is.na(dat$steps)])
 
 med1 <- aggregate(dat$steps, by=list(dat$date), FUN=mean, na.rm=TRUE)
@@ -105,20 +120,25 @@ hist(tot2$steps,
      main = "Daily steps - Updated", 
      xlab = 'Steps', 
      col = 'light blue')
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+```r
 totMean2 <- mean(tot2$steps, na.rm=TRUE)
 totMedian2 <- median(tot2$steps, na.rm=TRUE)
 ```
 
-In the original dataset, there are `r missingDataRows` rows.  
+In the original dataset, there are 2304 rows.  
 
-Mean of total steps: `r sprintf("%3.2f steps", totMean2)`  
-Median of total steps: `r sprintf("%3.2f steps", totMedian2)`
+Mean of total steps: 9354.23 steps  
+Median of total steps: 10395.00 steps
 
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r echo=TRUE, results='hide'}
+
+```r
 dat1<-copy(dat)
 dat1 <- cbind(dat1, 'wday'=weekdays(unique(dat1$date),abbreviate = TRUE))
 dat1$wday <- sapply(dat1$wday, function(x) ifelse (x=='Sat' | x=='Sun', 'Weekend', 'Weekday'))
@@ -131,5 +151,6 @@ xyplot(avg1$steps ~ avg1$interval|avg1$wday,
   	layout=c(1,2),
    ylab="Nbr of steps", 
    xlab="Interval")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
